@@ -36,18 +36,29 @@ function buildTree(files: RawFile[]) {
       description: file.description,
     });
 
-    const parts = file.relativePath.split(path.sep);
+    const normalizedPath = file.relativePath.replace(/\\/g, "/");
+    const parts = normalizedPath.split("/");
     let current = root;
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i];
       const isFile = i === parts.length - 1;
-      if (isFile) continue;
-      let child = current.children.find((c: any) => c.name === part && c.type === "dir");
-      if (!child) {
-        child = { name: part, type: "dir", children: [] };
-        current.children.push(child);
+      if (isFile) {
+        current.children.push({
+          name: part,
+          type: "file",
+          path: normalizedPath,
+          title: file.title,
+          date: file.date,
+          description: file.description,
+        });
+      } else {
+        let child = current.children.find((c: any) => c.name === part && c.type === "dir");
+        if (!child) {
+          child = { name: part, type: "dir", children: [] };
+          current.children.push(child);
+        }
+        current = child;
       }
-      current = child;
     }
   }
 

@@ -8,14 +8,14 @@ export default defineConfig({
           name: "node",
           environment: "node",
           include: ["src/**/*.test.ts"],
-          exclude: ["src/lib/history.test.ts"],
+          exclude: ["src/lib/history.test.ts", "src/lib/html-to-text.test.ts"],
         },
       },
       {
         test: {
           name: "jsdom",
           environment: "jsdom",
-          include: ["src/lib/history.test.ts"],
+          include: ["src/lib/history.test.ts", "src/lib/html-to-text.test.ts"],
         },
       },
     ],

@@ -21,6 +21,26 @@ export function executeCommand(
   }
 
   const result = handler(state, parsed.args, ctx);
+
+  if (result.openVi) {
+    return {
+      ...result,
+      state: {
+        ...result.state,
+        output: [...state.output, echo],
+      },
+      output: [],
+    };
+  }
+
+  if (result.replaceOutput) {
+    return {
+      ...result,
+      state: { ...result.state, output: [] },
+      output: [],
+    };
+  }
+
   return {
     ...result,
     state: {

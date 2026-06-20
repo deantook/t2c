@@ -51,6 +51,10 @@ export interface CommandResult {
   state: TerminalState;
   output: OutputLine[];
   asyncOutput?: Promise<OutputLine[]>;
+  /** When true, discard prior output instead of appending */
+  replaceOutput?: boolean;
+  /** Open file in vi read-only viewer */
+  openVi?: { path: string };
 }
 
 export interface ParsedCommand {

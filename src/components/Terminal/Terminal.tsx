@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CommandContext, FsTree, OutputLine, TerminalState } from "../../lib/types";
 import { executeCommand } from "../../lib/executor";
-import { getCompletions } from "../../lib/completion";
+import { applyCompletion, getCompletionFragment, getCompletions } from "../../lib/completion";
+import { htmlToLines } from "../../lib/html-to-text";
 import { loadHistory, pushHistory, navigateHistory } from "../../lib/history";
 import { hashToCommand, commandToHash } from "../../lib/hash";
 import { Output } from "./Output";
 import { InputLine } from "./InputLine";
+import { ViViewer, type ViSession } from "./ViViewer";
 
 interface Props {
   fs: FsTree;
@@ -41,6 +43,7 @@ export function Terminal({ fs }: Props) {
   });
   const [input, setInput] = useState("");
   const [histIndex, setHistIndex] = useState<number | null>(null);
+  const [viSession, setViSession] = useState<ViSession | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -54,6 +57,31 @@ export function Terminal({ fs }: Props) {
     async (raw: string) => {
       const currentState = stateRef.current;
       const result = executeCommand(currentState, raw, ctx);
+
+      if (result.openVi) {
+        const path = result.openVi.path;
+        setViSession({ path, lines: [], status: "loading" });
+        setState({
+          ...result.state,
+          history: pushHistory(currentState.history, raw),
+        });
+        setInput("");
+        setHistIndex(null);
+
+        try {
+          const html = await ctx.loadArticle(path);
+          setViSession({ path, lines: htmlToLines(html), status: "ready" });
+        } catch {
+          setViSession({
+            path,
+            lines: [],
+            status: "error",
+            error: "Error: failed to load file",
+          });
+        }
+        return;
+      }
+
       let output: OutputLine[] = result.output;
       let nextState = result.state;
 
@@ -100,41 +128,45 @@ export function Terminal({ fs }: Props) {
 
   return (
     <div className="h-full flex flex-col bg-terminal-bg">
-      <Output lines={state.output} />
-      <div ref={bottomRef} />
-      <InputLine
-        cwd={state.cwd}
-        value={input}
-        onChange={setInput}
-        onSubmit={() => void runInput(input)}
-        onHistoryUp={() => {
-          const idx = histIndex ?? state.history.length;
-          const cmd = navigateHistory(state.history, -1, idx);
-          if (cmd !== null) {
-            setInput(cmd);
-            setHistIndex(idx - 1);
-          }
-        }}
-        onHistoryDown={() => {
-          if (histIndex === null) return;
-          const cmd = navigateHistory(state.history, 1, histIndex);
-          if (cmd !== null) {
-            setInput(cmd);
-            setHistIndex(histIndex + 1);
-          } else {
-            setInput("");
-            setHistIndex(null);
-          }
-        }}
-        onTab={() => {
-          const fragment = input.split(/\s+/).pop() ?? input;
-          const matches = getCompletions(fs, state.cwd, input, fragment);
-          if (matches.length === 1) {
-            const base = input.slice(0, input.length - fragment.length);
-            setInput(base + matches[0]);
-          }
-        }}
-      />
+      {viSession ? (
+        <ViViewer session={viSession} onQuit={() => setViSession(null)} />
+      ) : (
+        <>
+          <Output lines={state.output} />
+          <div ref={bottomRef} />
+          <InputLine
+            cwd={state.cwd}
+            value={input}
+            onChange={setInput}
+            onSubmit={() => void runInput(input)}
+            onHistoryUp={() => {
+              const idx = histIndex ?? state.history.length;
+              const cmd = navigateHistory(state.history, -1, idx);
+              if (cmd !== null) {
+                setInput(cmd);
+                setHistIndex(idx - 1);
+              }
+            }}
+            onHistoryDown={() => {
+              if (histIndex === null) return;
+              const cmd = navigateHistory(state.history, 1, histIndex);
+              if (cmd !== null) {
+                setInput(cmd);
+                setHistIndex(histIndex + 1);
+              } else {
+                setInput("");
+                setHistIndex(null);
+              }
+            }}
+            onTab={() => {
+              const fragment = getCompletionFragment(input);
+              const matches = getCompletions(fs, state.cwd, input, fragment);
+              const next = applyCompletion(input, fragment, matches);
+              if (next !== null) setInput(next);
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }

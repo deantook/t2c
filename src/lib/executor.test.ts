@@ -30,10 +30,30 @@ describe("executeCommand", () => {
     expect(output[0].content).toContain("blog/");
   });
 
+  it("aliases tl to timeline", () => {
+    const state: TerminalState = { cwd: "~", history: [], output: [] };
+    const { output } = executeCommand(state, "tl", ctx);
+    expect(output[0].content).toContain("hello-world.md");
+  });
+
   it("ignores empty input", () => {
     const state: TerminalState = { cwd: "~", history: [], output: [] };
     const { output, state: next } = executeCommand(state, "", ctx);
     expect(output).toEqual([]);
     expect(next.cwd).toBe("~");
+  });
+
+  it("clear wipes all prior output", () => {
+    const state: TerminalState = {
+      cwd: "~",
+      history: [],
+      output: [
+        { kind: "text", content: "old line" },
+        { kind: "command-echo", content: "ll" },
+      ],
+    };
+    const { state: next, output } = executeCommand(state, "clear", ctx);
+    expect(next.output).toEqual([]);
+    expect(output).toEqual([]);
   });
 });
