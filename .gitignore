@@ -1,0 +1,4 @@
+.worktrees/
+public/generated/
+dist/
+node_modules/
