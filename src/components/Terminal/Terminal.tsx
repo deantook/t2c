@@ -14,7 +14,10 @@ interface Props {
 async function loadArticle(path: string): Promise<string> {
   const res = await fetch(`/generated/articles/${path}.html`);
   if (!res.ok) throw new Error("load failed");
-  return res.text();
+  const text = await res.text();
+  const doc = new DOMParser().parseFromString(text, "text/html");
+  const article = doc.querySelector("article");
+  return article?.outerHTML ?? text;
 }
 
 async function search(query: string) {

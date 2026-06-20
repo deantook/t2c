@@ -73,7 +73,12 @@ async function processContent(contentDir: string, outDir: string) {
         ? data.date.toISOString().slice(0, 10)
         : String(data.date ?? "1970-01-01");
     const htmlBody = marked.parse(content) as string;
-    const html = `<article class="terminal-prose">${htmlBody}</article>`;
+    const article = `<article class="terminal-prose" data-pagefind-body>${htmlBody}</article>`;
+    const html = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>${title}</title></head>
+<body>${article}</body>
+</html>`;
 
     processed.push({
       relativePath: rel.replace(/\\/g, "/"),
