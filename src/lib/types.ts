@@ -55,6 +55,8 @@ export interface CommandResult {
   replaceOutput?: boolean;
   /** Open file in vi read-only viewer */
   openVi?: { path: string };
+  /** Enter or exit browser fullscreen */
+  fullscreenAction?: "enter" | "exit";
 }
 
 export interface ParsedCommand {

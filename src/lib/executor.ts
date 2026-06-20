@@ -22,7 +22,7 @@ export function executeCommand(
 
   const result = handler(state, parsed.args, ctx);
 
-  if (result.openVi) {
+  if (result.openVi || result.fullscreenAction) {
     return {
       ...result,
       state: {

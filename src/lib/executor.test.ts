@@ -56,4 +56,12 @@ describe("executeCommand", () => {
     expect(next.output).toEqual([]);
     expect(output).toEqual([]);
   });
+
+  it("fullscreen requests enter without output", () => {
+    const state: TerminalState = { cwd: "~", history: [], output: [] };
+    const result = executeCommand(state, "fs", ctx);
+    expect(result.fullscreenAction).toBe("enter");
+    expect(result.output).toEqual([]);
+    expect(result.state.output).toEqual([{ kind: "command-echo", content: "fs" }]);
+  });
 });

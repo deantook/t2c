@@ -8,6 +8,7 @@ import { runHelp } from "./help";
 import { runClear } from "./clear";
 import { runAbout } from "./about";
 import { runVi } from "./vi";
+import { runExitFullscreen, runFullscreen } from "./fullscreen";
 import type { CommandContext, CommandResult, TerminalState } from "../types";
 
 type Handler = (state: TerminalState, args: string[], ctx: CommandContext) => CommandResult;
@@ -26,6 +27,9 @@ export const COMMANDS: Record<string, Handler> = {
   about: runAbout,
   vi: runVi,
   vim: runVi,
+  fullscreen: runFullscreen,
+  fs: runFullscreen,
+  "exit-fullscreen": runExitFullscreen,
 };
 
 export const COMMAND_NAMES = Object.keys(COMMANDS);

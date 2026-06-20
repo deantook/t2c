@@ -45,6 +45,7 @@ export function Terminal({ fs }: Props) {
   const [histIndex, setHistIndex] = useState<number | null>(null);
   const [viSession, setViSession] = useState<ViSession | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
 
@@ -57,6 +58,15 @@ export function Terminal({ fs }: Props) {
     async (raw: string) => {
       const currentState = stateRef.current;
       const result = executeCommand(currentState, raw, ctx);
+
+      if (result.fullscreenAction) {
+        const el = rootRef.current;
+        if (el) {
+          void (result.fullscreenAction === "enter"
+            ? el.requestFullscreen?.()
+            : document.exitFullscreen?.());
+        }
+      }
 
       if (result.openVi) {
         const path = result.openVi.path;
@@ -127,7 +137,7 @@ export function Terminal({ fs }: Props) {
   }, []);
 
   return (
-    <div className="h-full flex flex-col bg-terminal-bg">
+    <div ref={rootRef} className="h-full flex flex-col bg-terminal-bg">
       {viSession ? (
         <ViViewer session={viSession} onQuit={() => setViSession(null)} />
       ) : (

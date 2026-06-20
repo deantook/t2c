@@ -10,6 +10,8 @@ const HELP_TEXT = `Available commands:
   timeline, tl      List all posts by date
   grep <keyword>    Search posts
   clear             Clear terminal
+  fullscreen, fs    Enter fullscreen (Esc to exit)
+  exit-fullscreen   Exit fullscreen
   about             About this site`;
 
 export function runHelp(state: TerminalState, _args: string[], _ctx: CommandContext): CommandResult {
