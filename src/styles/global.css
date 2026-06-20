@@ -1,0 +1,24 @@
+@import "@fontsource/jetbrains-mono/400.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #terminal-root {
+  height: 100%;
+  margin: 0;
+}
+
+.terminal-prose h1, .terminal-prose h2, .terminal-prose h3 {
+  @apply text-terminal-text font-bold mt-4 mb-2;
+}
+.terminal-prose p { @apply mb-2; }
+.terminal-prose a { @apply text-terminal-link underline; }
+.terminal-prose pre {
+  @apply bg-terminal-codeBg p-3 rounded overflow-x-auto my-2;
+}
+.terminal-prose code { @apply font-mono text-sm; }
+.terminal-prose img { @apply max-w-full; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-blink { animation: none; }
+}
