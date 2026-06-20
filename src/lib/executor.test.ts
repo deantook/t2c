@@ -15,25 +15,32 @@ describe("executeCommand", () => {
     ({ state } = executeCommand(state, "cd docs", ctx));
     expect(state.cwd).toBe("~/docs");
     const { output } = executeCommand(state, "ll", ctx);
-    expect(output.some((o) => o.content.includes("frontend/"))).toBe(true);
+    expect(output.some((o) => o.kind === "ll")).toBe(true);
   });
 
   it("handles unknown command", () => {
     const state: TerminalState = { cwd: "~", history: [], output: [] };
     const { output } = executeCommand(state, "foo", ctx);
-    expect(output[0].content).toContain("command not found: foo");
+    expect(output[0].kind).toBe("error");
+    if (output[0].kind === "error") {
+      expect(output[0].content).toContain("command not found: foo");
+      expect(output[0].hint).toBe("Try 'help'");
+    }
   });
 
   it("aliases ls to ll", () => {
     const state: TerminalState = { cwd: "~", history: [], output: [] };
     const { output } = executeCommand(state, "ls", ctx);
-    expect(output[0].content).toContain("blog/");
+    expect(output[0].kind).toBe("ll");
   });
 
   it("aliases tl to timeline", () => {
     const state: TerminalState = { cwd: "~", history: [], output: [] };
     const { output } = executeCommand(state, "tl", ctx);
-    expect(output[0].content).toContain("hello-world.md");
+    expect(output[0].kind).toBe("timeline");
+    if (output[0].kind === "timeline") {
+      expect(output[0].entries.some((e) => e.path.includes("hello-world.md"))).toBe(true);
+    }
   });
 
   it("ignores empty input", () => {
@@ -49,7 +56,7 @@ describe("executeCommand", () => {
       history: [],
       output: [
         { kind: "text", content: "old line" },
-        { kind: "command-echo", content: "ll" },
+        { kind: "command-echo", input: "ll", cwd: "~" },
       ],
     };
     const { state: next, output } = executeCommand(state, "clear", ctx);
@@ -62,6 +69,13 @@ describe("executeCommand", () => {
     const result = executeCommand(state, "fs", ctx);
     expect(result.fullscreenAction).toBe("enter");
     expect(result.output).toEqual([]);
-    expect(result.state.output).toEqual([{ kind: "command-echo", content: "fs" }]);
+    expect(result.state.output).toEqual([{ kind: "command-echo", input: "fs", cwd: "~" }]);
+  });
+
+  it("echo includes cwd", () => {
+    const state: TerminalState = { cwd: "~/docs", history: [], output: [] };
+    const { state: next } = executeCommand(state, "pwd", ctx);
+    const echo = next.output.find((o) => o.kind === "command-echo");
+    expect(echo).toEqual({ kind: "command-echo", input: "pwd", cwd: "~/docs" });
   });
 });

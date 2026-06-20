@@ -103,3 +103,16 @@ export function getCompletions(fs: FsTree, cwd: string, line: string, fragment: 
 
   return [];
 }
+
+export function getGhostSuffix(fs: FsTree, cwd: string, line: string): string {
+  const fragment = getCompletionFragment(line);
+  if (!fragment || /\s$/.test(line)) return "";
+  const matches = getCompletions(fs, cwd, line, fragment);
+  if (!matches.length) return "";
+  if (matches.length === 1) {
+    const m = matches[0];
+    return m.startsWith(fragment) ? m.slice(fragment.length) : "";
+  }
+  const prefix = longestCommonPrefix(matches);
+  return prefix.length > fragment.length ? prefix.slice(fragment.length) : "";
+}

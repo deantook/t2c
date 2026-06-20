@@ -15,8 +15,14 @@ const ctx: CommandContext = {
 describe("runLl", () => {
   it("lists root directory", () => {
     const { output } = runLl(baseState, [], ctx);
-    expect(output[0].content).toContain("blog/");
-    expect(output[0].content).toContain("about.md");
+    expect(output[0].kind).toBe("ll");
+    if (output[0].kind !== "ll") return;
+    const names = output[0].entries.map((e) => e.name);
+    expect(names).toContain("blog");
+    expect(names).toContain("about.md");
+    const blog = output[0].entries.find((e) => e.name === "blog");
+    expect(blog?.type).toBe("dir");
+    expect(blog?.arg).toBe("blog");
   });
 });
 
@@ -29,13 +35,16 @@ describe("runCd", () => {
   it("errors on missing dir", () => {
     const { output } = runCd(baseState, ["nope"], ctx);
     expect(output[0].kind).toBe("error");
-    expect(output[0].content).toContain("No such file or directory");
+    if (output[0].kind === "error") {
+      expect(output[0].content).toContain("No such file or directory");
+    }
   });
 });
 
 describe("runPwd", () => {
   it("prints cwd", () => {
     const { output } = runPwd({ ...baseState, cwd: "~/docs" }, [], ctx);
-    expect(output[0].content).toBe("~/docs");
+    expect(output[0].kind).toBe("text");
+    if (output[0].kind === "text") expect(output[0].content).toBe("~/docs");
   });
 });

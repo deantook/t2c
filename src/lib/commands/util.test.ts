@@ -15,8 +15,11 @@ const ctx: CommandContext = {
 describe("runHelp", () => {
   it("lists commands", () => {
     const { output } = runHelp(baseState, [], ctx);
-    expect(output[0].content).toContain("ll");
-    expect(output[0].content).toContain("grep");
+    expect(output[0].kind).toBe("text");
+    if (output[0].kind === "text") {
+      expect(output[0].content).toContain("ll");
+      expect(output[0].content).toContain("grep");
+    }
   });
 });
 
@@ -30,14 +33,19 @@ describe("runClear", () => {
 describe("runGrep", () => {
   it("returns search results", async () => {
     const result = runGrep(baseState, ["react"], ctx);
+    expect(result.output[0].kind).toBe("loading");
     const out = await result.asyncOutput!;
-    expect(out[0].content).toContain("react-hooks.md");
-    expect(out[0].content).toContain("1 match");
+    expect(out[0].kind).toBe("grep");
+    if (out[0].kind === "grep") {
+      expect(out[0].matches[0].path).toContain("react-hooks.md");
+      expect(out[0].matches).toHaveLength(1);
+    }
   });
 
   it("handles no matches", async () => {
     const result = runGrep(baseState, ["zzzzz"], ctx);
     const out = await result.asyncOutput!;
-    expect(out[0].content).toBe("No matches found");
+    expect(out[0].kind).toBe("grep");
+    if (out[0].kind === "grep") expect(out[0].matches).toEqual([]);
   });
 });

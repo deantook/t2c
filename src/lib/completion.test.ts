@@ -4,6 +4,7 @@ import {
   applyCompletion,
   getCompletionFragment,
   getCompletions,
+  getGhostSuffix,
   longestCommonPrefix,
 } from "./completion";
 
@@ -60,5 +61,27 @@ describe("applyCompletion", () => {
 describe("getCompletionFragment", () => {
   it("returns empty fragment after trailing space", () => {
     expect(getCompletionFragment("cat ")).toBe("");
+  });
+});
+
+describe("getGhostSuffix", () => {
+  it("returns suffix for single command match", () => {
+    expect(getGhostSuffix(mockFs, "~", "h")).toBe("elp");
+  });
+
+  it("returns suffix for single file match", () => {
+    expect(getGhostSuffix(mockFs, "~", "cat ab")).toBe("out.md");
+  });
+
+  it("returns suffix for partial command match", () => {
+    expect(getGhostSuffix(mockFs, "~", "cat a")).toBe("bout.md");
+  });
+
+  it("returns empty when no matches", () => {
+    expect(getGhostSuffix(mockFs, "~", "cat zzzzzz")).toBe("");
+  });
+
+  it("returns empty after trailing space", () => {
+    expect(getGhostSuffix(mockFs, "~", "cat ")).toBe("");
   });
 });

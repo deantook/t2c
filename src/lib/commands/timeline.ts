@@ -3,6 +3,6 @@ import { getAllFilesSorted } from "../fs";
 
 export function runTimeline(state: TerminalState, _args: string[], ctx: CommandContext): CommandResult {
   const files = getAllFilesSorted(ctx.fs);
-  const lines = files.map((f) => `${f.date}  ${f.path.padEnd(36)}  ${f.title}`);
-  return { state, output: [{ kind: "text", content: lines.join("\n") }] };
+  const entries = files.map((f) => ({ date: f.date, path: f.path, title: f.title }));
+  return { state, output: [{ kind: "timeline", entries }] };
 }

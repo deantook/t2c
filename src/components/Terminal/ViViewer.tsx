@@ -97,7 +97,7 @@ export function ViViewer({ session, onQuit }: Props) {
           session.lines.map((line, i) => (
             <div key={i} className="flex leading-relaxed">
               <span
-                className="select-none text-terminal-green/40 pr-3 text-right shrink-0"
+                className="select-none text-terminal-green/55 pr-3 text-right shrink-0"
                 style={{ minWidth: `${gutterWidth}ch` }}
               >
                 {i + 1}

@@ -10,13 +10,13 @@ export function executeCommand(
   const parsed = parseInput(input);
   if (!parsed.command) return { state, output: [] };
 
-  const echo: OutputLine = { kind: "command-echo", content: input };
+  const echo: OutputLine = { kind: "command-echo", input, cwd: state.cwd };
   const handler = COMMANDS[parsed.command];
 
   if (!handler) {
     return {
       state: { ...state, output: [...state.output, echo] },
-      output: [{ kind: "error", content: `command not found: ${parsed.command}` }],
+      output: [{ kind: "error", content: `command not found: ${parsed.command}`, hint: "Try 'help'" }],
     };
   }
 

@@ -1,3 +1,4 @@
+import { createLoadingLine } from "../loading";
 import type { CommandContext, CommandResult, TerminalState } from "../types";
 
 export function runGrep(state: TerminalState, args: string[], ctx: CommandContext): CommandResult {
@@ -5,14 +6,21 @@ export function runGrep(state: TerminalState, args: string[], ctx: CommandContex
   if (!query) {
     return { state, output: [{ kind: "error", content: "grep: missing keyword" }] };
   }
+  const loading = createLoadingLine("Searching...");
   return {
     state,
-    output: [],
+    output: [loading],
     asyncOutput: ctx.search(query).then((results) => {
-      if (!results.length) return [{ kind: "text" as const, content: "No matches found" }];
-      const lines = results.map((r) => `${r.path}:${r.line ?? 1}: ${r.excerpt}`);
-      const footer = `\n${results.length} match${results.length === 1 ? "" : "es"} found`;
-      return [{ kind: "text" as const, content: lines.join("\n") + footer }];
+      if (results === null) {
+        return [{ kind: "error" as const, content: "Search unavailable (build required)" }];
+      }
+      const matches = results.map((r) => ({
+        path: r.path,
+        line: r.line ?? 1,
+        excerpt: r.excerpt,
+        highlight: query,
+      }));
+      return [{ kind: "grep" as const, query, matches }];
     }),
   };
 }

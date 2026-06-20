@@ -12,26 +12,37 @@ function makeCtx(loadArticle = async () => "<p>Hello</p>"): CommandContext {
 }
 
 describe("runCat", () => {
-  it("loads article html", async () => {
+  it("returns loading then article", async () => {
     const result = runCat(baseState, ["about.md"], makeCtx());
-    expect(result.output[0].content).toContain("Loading");
+    expect(result.output[0].kind).toBe("loading");
     const asyncOut = await result.asyncOutput!;
-    expect(asyncOut[0].kind).toBe("html");
-    expect(asyncOut[0].content).toBe("<p>Hello</p>");
+    expect(asyncOut[0].kind).toBe("article");
+    if (asyncOut[0].kind === "article") {
+      expect(asyncOut[0].path).toBe("about.md");
+      expect(asyncOut[0].title).toBe("About");
+      expect(asyncOut[0].html).toBe("<p>Hello</p>");
+    }
   });
 
   it("errors when file missing", () => {
     const { output } = runCat(baseState, ["nope.md"], makeCtx());
     expect(output[0].kind).toBe("error");
   });
+
+  it("returns error on load failure", async () => {
+    const result = runCat(baseState, ["about.md"], makeCtx(async () => { throw new Error("fail"); }));
+    const asyncOut = await result.asyncOutput!;
+    expect(asyncOut[0].kind).toBe("error");
+  });
 });
 
 describe("runTimeline", () => {
   it("lists files by date desc", () => {
     const { output } = runTimeline(baseState, [], makeCtx());
-    expect(output[0].content.indexOf("2024-03-15")).toBeLessThan(
-      output[0].content.indexOf("2024-01-20")
-    );
+    expect(output[0].kind).toBe("timeline");
+    if (output[0].kind !== "timeline") return;
+    expect(output[0].entries[0].date).toBe("2024-03-15");
+    expect(output[0].entries.at(-1)?.date).toBe("2024-01-01");
   });
 });
 
@@ -39,6 +50,7 @@ describe("runAbout", () => {
   it("cats about.md", async () => {
     const result = runAbout(baseState, [], makeCtx(async () => "<p>About me</p>"));
     const asyncOut = await result.asyncOutput!;
-    expect(asyncOut[0].content).toBe("<p>About me</p>");
+    expect(asyncOut[0].kind).toBe("article");
+    if (asyncOut[0].kind === "article") expect(asyncOut[0].html).toBe("<p>About me</p>");
   });
 });

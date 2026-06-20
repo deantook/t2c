@@ -1,4 +1,4 @@
-import type { CommandContext, CommandResult, TerminalState } from "../types";
+import type { CommandContext, CommandResult, TerminalState, LlEntry } from "../types";
 import { listDir } from "../fs";
 
 export function runLl(state: TerminalState, _args: string[], ctx: CommandContext): CommandResult {
@@ -6,9 +6,11 @@ export function runLl(state: TerminalState, _args: string[], ctx: CommandContext
   if (!entries.length) {
     return { state, output: [{ kind: "text", content: "" }] };
   }
-  const lines = entries.map((e) => {
-    if (e.type === "dir") return `drwxr-xr-x  ${e.name}/`;
-    return `-rw-r--r--  ${e.date}  ${e.name}`;
+  const mapped: LlEntry[] = entries.map((e) => {
+    if (e.type === "dir") {
+      return { type: "dir", name: e.name, arg: e.name };
+    }
+    return { type: "file", name: e.name, arg: e.name, date: e.date };
   });
-  return { state, output: [{ kind: "text", content: lines.join("\n") }] };
+  return { state, output: [{ kind: "ll", entries: mapped }] };
 }

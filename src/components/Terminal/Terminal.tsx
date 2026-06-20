@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { CommandContext, FsTree, OutputLine, TerminalState } from "../../lib/types";
+import type { CommandContext, FsTree, TerminalState } from "../../lib/types";
 import { executeCommand } from "../../lib/executor";
-import { applyCompletion, getCompletionFragment, getCompletions } from "../../lib/completion";
+import { applyCompletion, getCompletionFragment, getCompletions, getGhostSuffix } from "../../lib/completion";
 import { htmlToLines } from "../../lib/html-to-text";
 import { loadHistory, pushHistory, navigateHistory } from "../../lib/history";
 import { hashToCommand, commandToHash } from "../../lib/hash";
+import { replaceLoadingLine } from "../../lib/loading";
+import { isNearBottom, scrollBehaviorForOutput } from "../../lib/scroll";
 import { Output } from "./Output";
 import { InputLine } from "./InputLine";
+import { StatusBar } from "./StatusBar";
 import { ViViewer, type ViSession } from "./ViViewer";
 
 interface Props {
@@ -24,9 +27,7 @@ async function loadArticle(path: string): Promise<string> {
 
 async function search(query: string) {
   const pf = (window as Window & { pagefind?: { search: (q: string) => Promise<{ results: { data: () => Promise<{ url: string; excerpt: string }> }[] }> } }).pagefind;
-  if (!pf) {
-    return [];
-  }
+  if (!pf) return null;
   const results = await pf.search(query);
   const items = await Promise.all(results.results.slice(0, 10).map((r) => r.data()));
   return items.map((d) => ({
@@ -44,7 +45,8 @@ export function Terminal({ fs }: Props) {
   const [input, setInput] = useState("");
   const [histIndex, setHistIndex] = useState<number | null>(null);
   const [viSession, setViSession] = useState<ViSession | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const outputRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -92,17 +94,11 @@ export function Terminal({ fs }: Props) {
         return;
       }
 
-      let output: OutputLine[] = result.output;
-      let nextState = result.state;
-
-      if (result.asyncOutput) {
-        const asyncLines = await result.asyncOutput;
-        output = [...output, ...asyncLines];
-        nextState = { ...nextState, output: [...nextState.output, ...asyncLines] };
-      }
+      const loadingLine = result.output.find((l) => l.kind === "loading");
+      const loadingId = loadingLine?.kind === "loading" ? loadingLine.id : null;
 
       setState({
-        ...nextState,
+        ...result.state,
         history: pushHistory(currentState.history, raw),
       });
       setInput("");
@@ -110,6 +106,16 @@ export function Terminal({ fs }: Props) {
 
       const hash = commandToHash(raw);
       if (hash) window.location.hash = hash;
+
+      if (result.asyncOutput) {
+        const asyncLines = await result.asyncOutput;
+        setState((prev) => ({
+          ...prev,
+          output: loadingId
+            ? replaceLoadingLine(prev.output, loadingId, asyncLines)
+            : [...prev.output, ...asyncLines],
+        }));
+      }
     },
     [ctx],
   );
@@ -118,7 +124,12 @@ export function Terminal({ fs }: Props) {
   runInputRef.current = runInput;
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = outputRef.current;
+    if (!el || state.output.length === 0) return;
+    const newLines = state.output.slice(-3);
+    if (isNearBottom(el)) {
+      el.scrollTo({ top: el.scrollHeight, behavior: scrollBehaviorForOutput(newLines) });
+    }
   }, [state.output]);
 
   useEffect(() => {
@@ -142,11 +153,18 @@ export function Terminal({ fs }: Props) {
         <ViViewer session={viSession} onQuit={() => setViSession(null)} />
       ) : (
         <>
-          <Output lines={state.output} />
-          <div ref={bottomRef} />
+          <Output
+            lines={state.output}
+            onRunCommand={(cmd) => void runInput(cmd)}
+            onFocusInput={() => inputRef.current?.focus()}
+            outputRef={outputRef}
+          />
+          <StatusBar cwd={state.cwd} postCount={fs.files.length} />
           <InputLine
+            inputRef={inputRef}
             cwd={state.cwd}
             value={input}
+            ghostSuffix={getGhostSuffix(fs, state.cwd, input)}
             onChange={setInput}
             onSubmit={() => void runInput(input)}
             onHistoryUp={() => {
