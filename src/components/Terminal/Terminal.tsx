@@ -7,6 +7,7 @@ import { loadHistory, pushHistory, navigateHistory } from "../../lib/history";
 import { hashToCommand, commandToHash } from "../../lib/hash";
 import { replaceLoadingLine } from "../../lib/loading";
 import { isNearBottom, scrollBehaviorForOutput } from "../../lib/scroll";
+import { pagefindSearch } from "../../lib/pagefind";
 import { Output } from "./Output";
 import { InputLine } from "./InputLine";
 import { StatusBar } from "./StatusBar";
@@ -25,17 +26,6 @@ async function loadArticle(path: string): Promise<string> {
   return article?.outerHTML ?? text;
 }
 
-async function search(query: string) {
-  const pf = (window as Window & { pagefind?: { search: (q: string) => Promise<{ results: { data: () => Promise<{ url: string; excerpt: string }> }[] }> } }).pagefind;
-  if (!pf) return null;
-  const results = await pf.search(query);
-  const items = await Promise.all(results.results.slice(0, 10).map((r) => r.data()));
-  return items.map((d) => ({
-    path: d.url.replace(/^\//, "").replace(/\.html$/, ""),
-    excerpt: d.excerpt,
-  }));
-}
-
 export function Terminal({ fs }: Props) {
   const [state, setState] = useState<TerminalState>({
     cwd: "~",
@@ -52,7 +42,7 @@ export function Terminal({ fs }: Props) {
   stateRef.current = state;
 
   const ctx = useMemo<CommandContext>(
-    () => ({ fs, loadArticle, search }),
+    () => ({ fs, loadArticle, search: pagefindSearch }),
     [fs],
   );
 
@@ -135,16 +125,6 @@ export function Terminal({ fs }: Props) {
   useEffect(() => {
     const cmd = hashToCommand(window.location.hash);
     if (cmd) void runInputRef.current(cmd);
-  }, []);
-
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "/pagefind/pagefind.js";
-    script.type = "module";
-    document.head.appendChild(script);
-    return () => {
-      script.remove();
-    };
   }, []);
 
   return (
