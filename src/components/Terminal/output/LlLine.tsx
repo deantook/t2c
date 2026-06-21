@@ -25,7 +25,7 @@ export function LlLine({ entries, onRunCommand }: Props) {
             onRunCommand={onRunCommand}
           />
           {e.type === "file" && e.title && (
-            <span className="text-terminal-text/80 ml-auto shrink-0 pl-4">{e.title}</span>
+            <span className="text-terminal-blue ml-auto shrink-0 pl-4">{e.title}</span>
           )}
         </div>
       ))}

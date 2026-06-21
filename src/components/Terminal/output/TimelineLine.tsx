@@ -19,7 +19,7 @@ export function TimelineLine({ entries, onRunCommand }: Props) {
             ariaLabel={`Read ${e.path}`}
             onRunCommand={onRunCommand}
           />
-          <span className="text-terminal-text/80 ml-auto shrink-0 pl-4">{e.title}</span>
+          <span className="text-terminal-blue ml-auto shrink-0 pl-4">{e.title}</span>
         </div>
       ))}
     </div>

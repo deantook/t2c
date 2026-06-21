@@ -17,11 +17,29 @@ html, body, #terminal-root {
   animation: terminal-blink 1s step-end infinite;
 }
 
-.terminal-prose h1, .terminal-prose h2, .terminal-prose h3 {
-  @apply text-terminal-text font-bold mt-4 mb-2;
+.terminal-prose h1,
+.terminal-prose h2,
+.terminal-prose h3,
+.terminal-prose h4,
+.terminal-prose h5,
+.terminal-prose h6 {
+  @apply font-bold mt-4 mb-2;
+}
+.terminal-prose h1 {
+  @apply text-terminal-green text-lg;
 }
 .terminal-prose h2 {
-  @apply border-b border-terminal-codeBg pb-1;
+  @apply text-terminal-blue border-b border-terminal-codeBg pb-1;
+}
+.terminal-prose h3 {
+  @apply text-terminal-link;
+}
+.terminal-prose h4 {
+  @apply text-terminal-text;
+}
+.terminal-prose h5,
+.terminal-prose h6 {
+  @apply text-terminal-text/70 text-sm;
 }
 .terminal-prose p { @apply mb-2; }
 .terminal-prose a { @apply text-terminal-link underline; }
