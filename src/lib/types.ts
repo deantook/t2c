@@ -30,6 +30,7 @@ export interface LlEntry {
   /** Argument for cd/cat relative to listing cwd, e.g. "frontend" or "about.md" */
   arg: string;
   date?: string;
+  title?: string;
 }
 
 export interface TimelineEntry {

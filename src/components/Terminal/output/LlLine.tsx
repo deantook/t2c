@@ -10,7 +10,7 @@ export function LlLine({ entries, onRunCommand }: Props) {
   return (
     <div className="font-mono text-sm space-y-0.5 my-1">
       {entries.map((e) => (
-        <div key={e.name} className="flex gap-2 flex-wrap">
+        <div key={e.name} className="flex gap-2 min-w-0">
           <span className="text-terminal-text/40 shrink-0">
             {e.type === "dir" ? "drwxr-xr-x" : "-rw-r--r--"}
           </span>
@@ -20,10 +20,13 @@ export function LlLine({ entries, onRunCommand }: Props) {
           <ClickablePath
             label={e.type === "dir" ? `${e.name}/` : e.name}
             command={e.type === "dir" ? `cd ${e.arg}` : `cat ${e.arg}`}
-            className={e.type === "dir" ? "text-terminal-blue" : "text-terminal-text"}
+            className={e.type === "dir" ? "text-terminal-blue shrink-0" : "text-terminal-text shrink-0"}
             ariaLabel={e.type === "dir" ? `Open directory ${e.name}` : `Read file ${e.name}`}
             onRunCommand={onRunCommand}
           />
+          {e.type === "file" && e.title && (
+            <span className="text-terminal-text/80 ml-auto shrink-0 pl-4">{e.title}</span>
+          )}
         </div>
       ))}
     </div>

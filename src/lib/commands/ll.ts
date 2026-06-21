@@ -10,7 +10,7 @@ export function runLl(state: TerminalState, _args: string[], ctx: CommandContext
     if (e.type === "dir") {
       return { type: "dir", name: e.name, arg: e.name };
     }
-    return { type: "file", name: e.name, arg: e.name, date: e.date };
+    return { type: "file", name: e.name, arg: e.name, date: e.date, title: e.title };
   });
   return { state, output: [{ kind: "ll", entries: mapped }] };
 }
